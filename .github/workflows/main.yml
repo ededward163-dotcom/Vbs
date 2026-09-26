@@ -1,0 +1,49 @@
+name: VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  vps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2160
+    steps:
+      - name: Setup SSH server
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y openssh-server
+          sudo systemctl enable ssh
+          sudo systemctl start ssh
+          echo "root:Vps@12345" | sudo chpasswd
+          sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+          sudo sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+          sudo systemctl restart ssh
+
+      - name: Start tunnel with serveo
+        run: |
+          nohup ssh -o StrictHostKeyChecking=no -R 0:localhost:22 serveo.net > /tmp/tunnel.log 2>&1 &
+          sleep 20
+          echo "=== TUNNEL LOG ==="
+          cat /tmp/tunnel.log
+          
+          ADDR=$(grep -o 'serveo.net:[0-9]*' /tmp/tunnel.log | head -1)
+          
+          if [ -z "$ADDR" ]; then
+            echo "❌ فشل فتح الـ tunnel"
+            exit 1
+          fi
+          
+          HOST=$(echo "$ADDR" | cut -d: -f1)
+          PORT=$(echo "$ADDR" | cut -d: -f2)
+          
+          echo "=============================================="
+          echo "Host:     $HOST"
+          echo "Port:     $PORT"
+          echo "User:     root"
+          echo "Password: Vps@12345"
+          echo "ssh root@$HOST -p $PORT"
+          echo "=============================================="
+
+      - name: Keep runner alive
+        run: |
+          sleep 129600
