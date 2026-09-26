@@ -26,7 +26,11 @@ jobs:
           echo "=== TUNNEL LOG ==="
           cat /tmp/tunnel.log
           
-          ADDR=$(grep -o 'serveo.net:[0-9]*' /tmp/tunnel.log | head -1)
+          ADDR=$(grep -o 'serveousercontent.com:[0-9]*' /tmp/tunnel.log | head -1)
+          
+          if [ -z "$ADDR" ]; then
+            ADDR=$(grep -o 'serveo.net:[0-9]*' /tmp/tunnel.log | head -1)
+          fi
           
           if [ -z "$ADDR" ]; then
             echo "❌ فشل فتح الـ tunnel"
@@ -37,10 +41,14 @@ jobs:
           PORT=$(echo "$ADDR" | cut -d: -f2)
           
           echo "=============================================="
+          echo "         بيانات الاتصال جاهزة"
+          echo "=============================================="
           echo "Host:     $HOST"
           echo "Port:     $PORT"
           echo "User:     root"
           echo "Password: Vps@12345"
+          echo ""
+          echo "اتصل بالأمر:"
           echo "ssh root@$HOST -p $PORT"
           echo "=============================================="
 
